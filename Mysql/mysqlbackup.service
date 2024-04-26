@@ -1,0 +1,15 @@
+[Unit]
+Description=MySQL Backup Script
+Requires=mysqld.service
+After=mysqld.service
+
+[Service]
+Type=simple
+User=root
+#Allow Admins some time to stop backups from happening immediately after the start up.
+TimeoutStartSec=360
+ExecStartPre=/bin/sleep 300
+ExecStart=/usr/bin/mysqlbackup.sh
+
+[Install]
+WantedBy=multi-user.target
