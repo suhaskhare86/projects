@@ -29,11 +29,13 @@ for database in $DATABASES; do
   fi
 
   # Dump database and compress with gzip
-  /usr/bin/mysqldump "$database" 2>>/tmp/mysqldump_error.log | gzip > "$BACKUP_DIR/$TODAY-$database.sql.gz"
+  /usr/bin/mysqldump --defaults-extra-file="$MYSQL_LOGIN_FILE" "$database" 2>>/tmp/mysqldump_error.log | gzip > "$BACKUP_DIR/$TODAY-$database.sql.gz"
 
   # Check for mysqldump errors
-  if [[ $? -ne 0 ]]; then
+  if [ "`echo ${PIPESTATUS[@]}`" != "0 0" ]
+  then
     echo "Error during backup of database $database. See /tmp/mysqldump_error.log for details."
+    rm "$BACKUP_DIR/$TODAY-$database.sql.gz" 2>/dev/null
     exit 1
   fi
 done
