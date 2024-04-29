@@ -7,93 +7,83 @@ pid /run/nginx.pid;
 include /usr/share/nginx/modules/*.conf;
 
 events {
-    worker_connections 1024;
+   worker_connections 1024;
 }
 
 http {
-    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
-                      '$status $body_bytes_sent "$http_referer" '
-                      '"$http_user_agent" "$http_x_forwarded_for"';
+   log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                     '$status $body_bytes_sent "$http_referer" '
+                     '"$http_user_agent" "$http_x_forwarded_for"';
 
-    access_log  /var/log/nginx/access.log  main;
+   access_log  /var/log/nginx/access.log  main;
 
-    sendfile            on;
-    tcp_nopush          on;
-    keepalive_timeout   65;
-    types_hash_max_size 4096;
+   sendfile            on;
+   tcp_nopush          on;
+   keepalive_timeout   65;
+   types_hash_max_size 4096;
 
-    include             /etc/nginx/mime.types;
-    default_type        application/octet-stream;
+   include             /etc/nginx/mime.types;
+   default_type        application/octet-stream;
 
-    # Load modular configuration files from the /etc/nginx/conf.d directory.
-    # See http://nginx.org/en/docs/ngx_core_module.html#include
-    # for more information.
-    include /etc/nginx/conf.d/*.conf;
+   # Load modular configuration files from the /etc/nginx/conf.d directory.
+   # See http://nginx.org/en/docs/ngx_core_module.html#include
+   # for more information.
+   include /etc/nginx/conf.d/*.conf;
 
-    server {
-        listen       80;
-        server_name  _;
-        #root         /usr/share/nginx/html;
+   server {
+       listen       80;
+       server_name  _;
+       #root         /usr/share/nginx/html;
 
-        # Redirect all HTTP traffic to HTTPS
-          if ($scheme != https) {
-            return 301 https://$host$request_uri;
-          }
+       # Redirect all HTTP traffic to HTTPS
+         if ($scheme != https) {
+           return 301 https://$host$request_uri;
+         }
 
-        # SSL configuration (move these outside any location blocks)
-        listen 443 ssl; # Listen on port 443 for HTTPS connections
-        ssl_certificate /etc/ssl/certs/server.crt;
-        ssl_certificate_key /etc/ssl/private/server.key;
+       # SSL configuration (move these outside any location blocks)
+       listen 443 ssl; # Listen on port 443 for HTTPS connections
+       ssl_certificate /etc/ssl/certs/yourdomain.crt;
+       ssl_certificate_key /etc/ssl/private/yourdomain.key;
 
-        # Load configuration files for the default server block.
-        #include /etc/nginx/default.d/*.conf;
+       # Load configuration files for the default server block.
+       include /etc/nginx/default.d/*.conf;
 
-        error_page 404 /404.html;
-        location = /404.html {
-        }
+       error_page 404 /404.html;
+       location = /404.html {
+       }
 
-        error_page 500 502 503 504 /50x.html;
-        location = /50x.html {
-        }
+       error_page 500 502 503 504 /50x.html;
+       location = /50x.html {
+       }
 
-         # Location block for all paths except /api1 and /api2, proxying to 127.0.0.1:3000
-        location / {
-              proxy_pass http://127.0.0.1:3000;
-              proxy_set_header Host $host;
-              proxy_set_header X-Real-IP $remote_addr;
-        }
+        # Location block for all paths except /api1 and /api2, proxying to 127.0.0.1:3000
+       location / {
+             proxy_pass http://127.0.0.1:4000;
+             proxy_set_header Host $host;
+             proxy_set_header X-Real-IP $remote_addr;
+             proxy_set_header Referer "";
+             
+             rewrite ^(/[a-zA-Z0-9/]*)$ / break;
 
-        # Location block for /api/anypath, proxying to 127.0.0.1:4000
-          location /api2/ {
-            proxy_pass http://127.0.0.1:4000;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-          }
+       }
 
-        # Location block for /api2/anypath, proxying to 127.0.0.1:5000
-          location /api3/ {
-            proxy_pass http://127.0.0.1:5000;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-          }
+       # Location block for /api/anypath, proxying to 127.0.0.1:4000
+         location /api/ {
+           proxy_pass http://127.0.0.1:3000;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+         }
 
-        # phpmyadmin
-          location /phpmyadmin/ {
-            proxy_pass http://127.0.0.1:8080;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-Proto https;
+       # phpmyadmin
+         location /phpmyadmin/ {
+           proxy_pass http://127.0.0.1:8080;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-Proto https;
 
-            rewrite ^/phpmyadmin/(.*) /$1 break;
-          }
-
-        # images
-          location /images/ {
-            root /var/www/mydomain/;
-            # Optional: Set appropriate access rights using directives like "allow" or "deny"
-          }
+           rewrite ^/phpmyadmin/(.*) /$1 break;
+         }
 
 
-    }
+   }
 }
-
