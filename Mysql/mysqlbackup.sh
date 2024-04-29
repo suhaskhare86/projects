@@ -4,6 +4,8 @@
 # This script reads mysql credentials from $HOME/.mylogin.cnf file
 #
 
+# No of recent backup files to keep
+RETENTION=7
 
 # Get today's date in YYYY-MM-DD format
 TODAY=$(date +%Y-%m-%d)
@@ -42,11 +44,23 @@ for database in $DATABASES; do
     rm "$BACKUP_DIR/$TODAY-$database.sql.gz" 2>/dev/null
     exit 1
   fi
+ 
+  # Keep recent $RETENTION days copies and delete older ones
+  backup_copies=($(ls -t /root/backups/mysql/*-${database}.sql.gz))
+
+  for i in `seq $RETENTION ${#backup_copies[@]}`
+  do
+    if [ "${backup_copies[$i]}" == "" ]
+    then
+      break
+    fi
+    
+    rm ${backup_copies[$i]} &&
+    echo "Deleted old backup - ${backup_copies[$i]}..."
+  done
+
+
 done
-
-
-# Delete backups older than 7 days
-find "$BACKUP_DIR" -type f -name "*.sql.gz" -mtime +7 -delete
 
 echo "Daily MySQL backup completed: $BACKUP_DIR/$TODAY.*.sql.gz"
 
