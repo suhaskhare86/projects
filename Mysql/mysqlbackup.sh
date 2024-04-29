@@ -35,7 +35,7 @@ for database in $DATABASES; do
   fi
 
   # Dump database and compress with gzip
-  /usr/bin/mysqldump --defaults-extra-file="$MYSQL_LOGIN_FILE" "$database" | gzip > "$BACKUP_DIR/$TODAY-$database.sql.gz"
+  /usr/bin/mysqldump "$database" | gzip > "$BACKUP_DIR/$TODAY-$database.sql.gz"
 
   # Check for mysqldump errors
   if [ "`echo ${PIPESTATUS[@]}`" != "0 0" ]
