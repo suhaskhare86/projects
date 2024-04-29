@@ -1,9 +1,9 @@
 [Unit]
-Description=Run MySQL backup every 30 minutes
+Description=Run MySQL backup every 12 hours
 
 [Timer]
 OnBootSec=5min
-OnUnitActiveSec=30min
+OnUnitActiveSec=720min
 Unit=mysqlbackup.service
 
 [Install]
